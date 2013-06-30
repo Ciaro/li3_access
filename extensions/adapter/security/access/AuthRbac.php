@@ -22,19 +22,17 @@ class AuthRbac extends \lithium\core\Object {
 	/**
 	 * The `Rbac` adapter will iterate through the rbac data Array.
 	 *
-	 * @todo: write better tests!
-	 *
-	 * @param mixed $requester The user data array that holds all necessary information about
-	 *        the user requesting access. Or false (because Auth::check() can return false).
-	 *        This is an optional parameter, because we will fetch the users data through Auth
-	 *        seperately.
+	 * @param mixed $user The user data array that holds all necessary information about
+	 *        the user requesting access. Or false (because `Auth::check()` can return `false`).
 	 * @param mixed $params The Lithium `Request` object, or an array with at least
 	 *        'request', and 'params'
 	 * @param array $options An array of additional options for the _getRolesByAuth method.
-	 * @return Array An empty array if access is allowed or
-	 *         an array with reasons for denial if denied.
+	 * @return array An empty array if access is allowed and an array with reasons for denial
+	 *         if denied.
 	 */
-	public function check($requester, $params, array $options = array()) {
+	public function check($user, $params, array $options = array()) {
+		$options['user'] = $user;
+		
 		if (empty($this->_roles)) {
 			throw new ConfigException('No roles defined for adapter configuration.');
 		}
@@ -101,8 +99,8 @@ class AuthRbac extends \lithium\core\Object {
 	/**
 	 * parseMatch Matches the current request parameters against a set of given parameters.
 	 * Can match against a shorthand string (Controller::action) or a full array. If a parameter
-	 * is provided then it must have an equivilent in the Request objects parmeters in order
-	 * to validate. * Is also acceptable to match a parameter without a specific value.
+	 * is provided then it must have an equivalent in the Request objects parmeters in order
+	 * to validate. `*` is also acceptable to match a parameter without a specific value.
 	 *
 	 * @param mixed $match A set of parameters to validate the request against.
 	 * @param mixed $params The Lithium `Request` object, or an array with at least
@@ -159,7 +157,7 @@ class AuthRbac extends \lithium\core\Object {
 	/**
 	 * _parseClosures Iterates over an array and runs any anonymous functions it
 	 * finds. Returns true if all of the closures it runs evaluate to true. $match
-	 * is passed by refference and any closures found are removed from it before the
+	 * is passed by reference and any closures found are removed from it before the
 	 * method is complete.
 	 *
 	 * @static
@@ -184,18 +182,23 @@ class AuthRbac extends \lithium\core\Object {
 	}
 
 	/**
-	 * @todo reduce Model Overhead (will duplicated in each model)
-	 *
 	 * @param mixed $params The Lithium `Request` object, or an array with at least
 	 *        'request', and 'params'
 	 * @param array $options
 	 * @return array|mixed $roles Roles with attached User Models
 	 */
 	protected static function _getRolesByAuth($params, array $options = array()) {
-		$roles = array('*' => '*');
-		foreach (array_keys(Auth::config()) as $key) {
-			if ($check = Auth::check($key, $params['request'], $options)) {
-				$roles[$key] = $check;
+		$defaults = array('user' => false);
+		$options += $defaults;
+
+		$roles = array(
+			'*'     => '*', // everyone
+			'guest' => null
+		);
+
+		if($user = $options['user']) {
+			if ($role = $user['role']) {
+				$roles[$role] = $user;
 			}
 		}
 		return $roles = array_filter($roles);
