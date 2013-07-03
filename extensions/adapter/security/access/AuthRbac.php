@@ -39,9 +39,6 @@ class AuthRbac extends \lithium\core\Object {
 			throw new ConfigException('No rules defined for adapter configuration.');
 		}
 		
-		$defaults = array('user' => $user);
-		$options += $defaults;
-
 		$ruleDefaults = array(
 			'resources' => '*',
 			'message'   => '',
@@ -67,7 +64,7 @@ class AuthRbac extends \lithium\core\Object {
 				continue;
 			}
 
-			$accessible = static::_isAccessible($rule, $params, $options);
+			$accessible = static::_isAccessible($rule, $params);
 			if (!$accessible) {
 				$message = !empty($rule['message']) ? $rule['message'] : $message;
 				$redirect = !empty($rule['redirect']) ? $rule['redirect'] : $redirect;
@@ -143,15 +140,14 @@ class AuthRbac extends \lithium\core\Object {
 	 *
 	 * @param array $rule     The rule that is being processed (passed by reference).
 	 * @param mixed $params   A lithium Request object.
-	 * @param array $options  An array of additional options.
 	 * @return boolean        $accessible
 	 */
-	protected static function _isAccessible(&$rule, $params, $options) {
+	protected static function _isAccessible(&$rule, $params) {
 		if ($rule['allow'] === false) {
 			return false;
 		}
 
-		if (!static::_hasRole($rule['resources'], $options)) {
+		if (!static::_hasRole($rule)) {
 			return false;
 		}
 
@@ -161,14 +157,14 @@ class AuthRbac extends \lithium\core\Object {
 		return true;
 	}
 
-	protected static function _hasRole($resources, array $options = array()) {
-		$resources = (array) $resources;
+	protected static function _hasRole($rule) {
+		$resources = (array) $rule['resources'];
 		
 		$roles = array(
 			'*' // everyone
 		);
 
-		if($user = $options['user']) {
+		if($user = $rule['session']) {
 			if (isset($user['role'])) {
 				$roles[] = 'user';
 				$roles[] = $user['role'];
@@ -180,7 +176,7 @@ class AuthRbac extends \lithium\core\Object {
 		if (in_array('*', $resources)) {
 			return true;
 		}
-		//die(var_dump($roles));
+
 		foreach ($roles as $role) {
 			if (in_array($role, $resources)) {
 				return true;
@@ -196,15 +192,15 @@ class AuthRbac extends \lithium\core\Object {
 	 *
 	 * @param array $data       Dereferenced array.
 	 * @param object $request   The Lithium `Request` object.
-	 * @param array   $options  Dereferenced Array
+	 * @param array $options    Dereferenced Array
 	 * @return boolean
 	 */
-	protected static function _parseClosures(array &$data, $request, array &$options = array()) {
+	protected static function _parseClosures(array &$data, $request, array &$ruleOptions = array()) {
 		$return = true;
 		foreach ($data as $key => $item) {
 			if (is_callable($item)) {
 				if ($return === true) {
-					$return = (boolean) $item($request, $options);
+					$return = (boolean) $item($request, $ruleOptions);
 				}
 				unset($data[$key]);
 			}
