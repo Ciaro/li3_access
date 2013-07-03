@@ -18,29 +18,29 @@ class AuthRbacTest extends \lithium\test\Unit {
 
 	public function setUp() {
 		Auth::config(array(
-			'user' => array(
+			'rbac_user' => array(
 				'adapter' => 'li3_access\tests\mocks\extensions\adapter\auth\MockAuthAdapter'
 			)
 		));
 
 		Access::config(array(
-			'test_no_roles_configured' => array('adapter' => 'AuthRbac'),
+			'test_no_rules_configured' => array('adapter' => 'AuthRbac'),
 			'test_check' => array(
 				'adapter' => 'AuthRbac',
-				'roles' => array(
+				'rules' => array(
 					'allow' => array(
-						'requesters' => 'user',
+						'resources' => 'user',
 						'match' => '*::*'
 					)
 				)
 			),
 			'test_closures' => array(
 				'adapter' => 'AuthRbac',
-				'roles' => array(
+				'rules' => array(
 					array(
-						'requesters' => '*',
-						'allow' => array(function($request, &$roleOptions) {
-							$roleOptions['message'] = 'Test allow options set.';
+						'resources' => '*',
+						'allow' => array(function($request, &$ruleOptions) {
+							$ruleOptions['message'] = 'Test allow options set.';
 							return $request->params['allow'] ? true : false;
 						}),
 						'match' => array(
@@ -55,12 +55,12 @@ class AuthRbacTest extends \lithium\test\Unit {
 			),
 			'test_allow_closure' => array(
 				'adapter' => 'AuthRbac',
-				'roles' => array(
+				'rules' => array(
 					array(
-						'requesters' => '*',
+						'resources' => '*',
 						'match' => '*::*',
-						'allow' => function($request, &$roleOptions) {
-							$roleOptions['message'] = 'Test allow options set.';
+						'allow' => function($request, &$ruleOptions) {
+							$ruleOptions['message'] = 'Test allow options set.';
 							return $request->params['allow'] ? true : false;
 						}
 					)
@@ -68,14 +68,14 @@ class AuthRbacTest extends \lithium\test\Unit {
 			),
 			'test_allow_closure_match' => array(
 				'adapter' => 'AuthRbac',
-				'roles' => array(
+				'rules' => array(
 					array(
-						'requesters' => '*',
+						'resources' => '*',
 						'match' => function($request) {
 							return !empty($request->params['allow_match']);
 						},
-						'allow' => function($request, &$roleOptions) {
-							$roleOptions['message'] = 'Test allow options set 2.';
+						'allow' => function($request, &$ruleOptions) {
+							$ruleOptions['message'] = 'Test allow options set 2.';
 							return $request->params['allow'] ? true : false;
 						}
 					)
@@ -83,22 +83,22 @@ class AuthRbacTest extends \lithium\test\Unit {
 			),
 			'test_message_override' => array(
 				'adapter' => 'AuthRbac',
-				'roles' => array(
+				'rules' => array(
 					array(
 						'allow' => false,
-						'requesters' => '*',
+						'resources' => '*',
 						'match' => '*::*'
 					),
 					array(
 						'message' => 'Rule access denied message.',
-						'redirect' => '/',
-						'requesters' => 'user',
+						'redirect' => 'Users::login',
+						'resources' => '*',
 						'match' => 'TestControllers::test_action'
 					),
 					array(
 						'message' => 'Test no overwrite.',
 						'redirect' => '/test_no_overwrite',
-						'requesters' => 'user',
+						'resources' => 'user',
 						'match' => null
 					)
 				)
@@ -107,7 +107,7 @@ class AuthRbacTest extends \lithium\test\Unit {
 	}
 
 	public function tearDown() {
-		Auth::clear('user');
+		Auth::clear('rbac_user');
 	}
 
 	public function testCheck() {
@@ -118,12 +118,12 @@ class AuthRbacTest extends \lithium\test\Unit {
 		)));
 
 		$guest = array();
-		$user = array('username' => 'test');
+		$user = array('username' => 'test', 'role' => 'user');
 
 		$request->data = $guest;
 		$expected = array(
-			'message' => 'You are not permitted to access this area.',
-			'redirect' => '/'
+			'message' => 'You are not authorized to access this page.',
+			'redirect' => 'Users::login'
 		);
 		$result = Access::check('test_check', $guest, $request, array('checkSession' => false));
 		$this->assertIdentical($expected, $result);
@@ -145,10 +145,10 @@ class AuthRbacTest extends \lithium\test\Unit {
 		)));
 
 		$guest = array();
-		$user = array('username' => 'test');
+		$user = array('username' => 'test', 'role' => 'user');
 
 		$request->data = $guest;
-		$expected = array('message' => 'Rule access denied message.', 'redirect' => '/');
+		$expected = array('message' => 'Rule access denied message.', 'redirect' => 'Users::login');
 		$result = Access::check('test_message_override', $guest, $request, array(
 			'checkSession' => false
 		));
@@ -164,13 +164,13 @@ class AuthRbacTest extends \lithium\test\Unit {
 
 		$request->params = array(
 			'controller' => 'test_controllers',
-			'action' => 'test_deinied_action'
+			'action' => 'test_denied_action'
 		);
 
 		$request->data = $guest;
 		$expected = array(
-			'message' => 'You are not permitted to access this area.',
-			'redirect' => '/'
+			'message' => 'You are not authorized to access this page.',
+			'redirect' => 'Users::login'
 		);
 		$result = Access::check('test_message_override', $guest, $request, array(
 			'checkSession' => false
@@ -179,8 +179,8 @@ class AuthRbacTest extends \lithium\test\Unit {
 
 		$request->data = $user;
 		$expected = array(
-			'message' => 'You are not permitted to access this area.',
-			'redirect' => '/'
+			'message' => 'You are not authorized to access this page.',
+			'redirect' => 'Users::login'
 		);
 		$result = Access::check('test_message_override', $user, $request, array(
 			'checkSession' => false
@@ -272,7 +272,7 @@ class AuthRbacTest extends \lithium\test\Unit {
 			'controller' => 'test_controllers', 'action' => 'test_action'
 		)));
 
-		$user = $request->data = array('username' => 'test');
+		$user = $request->data = array('username' => 'test', 'role' => 'user');
 		$authSuccess = array('checkSession' => false, 'success' => true);
 
 		$request->params['match'] = true;
@@ -282,7 +282,7 @@ class AuthRbacTest extends \lithium\test\Unit {
 
 		$request->params['match'] = true;
 		$request->params['allow'] = false;
-		$expected = array('message' => 'Test allow options set.', 'redirect' => '/');
+		$expected = array('message' => 'Test allow options set.', 'redirect' => 'Users::login');
 		$result = Access::check('test_closures', $user, $request, $authSuccess);
 		$this->assertIdentical($expected, $result);
 
@@ -292,8 +292,8 @@ class AuthRbacTest extends \lithium\test\Unit {
 		$request->params['allow'] = true;
 		$result = Access::check('test_closures', $user, $request, $authSuccess);
 		$expected = array(
-			'message' => 'You are not permitted to access this area.',
-			'redirect' => '/'
+			'message' => 'You are not authorized to access this page.',
+			'redirect' => 'Users::login'
 		);
 		$this->assertIdentical($expected, $result);
 
@@ -304,7 +304,7 @@ class AuthRbacTest extends \lithium\test\Unit {
 
 		$request->params['allow'] = false;
 		$result = Access::check('test_allow_closure', $user, $request, $authSuccess);
-		$expected = array('message' => 'Test allow options set.', 'redirect' => '/');
+		$expected = array('message' => 'Test allow options set.', 'redirect' => 'Users::login');
 		$this->assertIdentical($expected, $result);
 
 		$request->params['allow'] = true;
@@ -316,25 +316,25 @@ class AuthRbacTest extends \lithium\test\Unit {
 		$request->params['allow'] = false;
 		$request->params['allow_match'] = true;
 		$result = Access::check('test_allow_closure_match', $user, $request, $authSuccess);
-		$expected = array('message' => 'Test allow options set 2.', 'redirect' => '/');
+		$expected = array('message' => 'Test allow options set 2.', 'redirect' => 'Users::login');
 		$this->assertIdentical($expected, $result);
 
 		$request->params['allow'] = true;
 		$request->params['allow_match'] = false;
 		$result = Access::check('test_allow_closure_match', $user, $request, $authSuccess);
-		$expected = array('message' => 'You are not permitted to access this area.', 'redirect' => '/');
+		$expected = array('message' => 'You are not authorized to access this page.', 'redirect' => 'Users::login');
 		$this->assertIdentical($expected, $result);
 	}
 
-	public function testNoRolesConfigured() {
+	public function testNoRulesConfigured() {
 		$request = new Request();
 
-		$config = Access::config('test_no_roles_configured');
+		$config = Access::config('test_no_rules_configured');
 		$request->params = array('controller' => 'Tests', 'action' => 'granted');
 
 		$this->assertTrue(empty($config['roles']));
-		$this->expectException('No roles defined for adapter configuration.');
-		Access::check('test_no_roles_configured', array('guest' => null), $request);
+		$this->expectException('No rules defined for adapter configuration.');
+		Access::check('test_no_rules_configured', array('guest' => null), $request);
 	}
 }
 

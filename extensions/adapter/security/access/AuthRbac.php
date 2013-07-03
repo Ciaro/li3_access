@@ -169,9 +169,9 @@ class AuthRbac extends \lithium\core\Object {
 		);
 
 		if($user = $options['user']) {
-			if ($role = $user['role']) {
+			if (isset($user['role'])) {
 				$roles[] = 'user';
-				$roles[] = $role;
+				$roles[] = $user['role'];
 			}
 		} else {
 			$roles[] = 'guest';
@@ -180,7 +180,7 @@ class AuthRbac extends \lithium\core\Object {
 		if (in_array('*', $resources)) {
 			return true;
 		}
-		
+		//die(var_dump($roles));
 		foreach ($roles as $role) {
 			if (in_array($role, $resources)) {
 				return true;
