@@ -92,7 +92,7 @@ class AuthRbacTest extends \lithium\test\Unit {
 					array(
 						'message' => 'Rule access denied message.',
 						'redirect' => 'Users::login',
-						'resources' => 'user',
+						'resources' => '*',
 						'match' => 'Rbac::action'
 					),
 					array(
@@ -286,7 +286,7 @@ class AuthRbacTest extends \lithium\test\Unit {
 		$result = Access::check('test_closures', $user, $request, $authSuccess);
 		$this->assertIdentical($expected, $result);
 
-		$request->params = array('controller' => 'Rbac', 'action' => 'bad_action');
+		$request->params = array('controller' => 'Rbac', 'action' => 'denied');
 
 		$request->params['match'] = true;
 		$request->params['allow'] = true;

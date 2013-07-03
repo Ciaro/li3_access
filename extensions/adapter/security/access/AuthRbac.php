@@ -70,7 +70,7 @@ class AuthRbac extends \lithium\core\Object {
 				$redirect = !empty($rule['redirect']) ? $rule['redirect'] : $redirect;
 			}
 		}
-		return !$accessible ? compact('message', 'redirect') : array();
+		return $accessible ? array() : compact('message', 'redirect');
 	}
 
 	/**
