@@ -47,8 +47,8 @@ class AuthRbacTest extends \lithium\test\Unit {
 							function($request) {
 								return $request->params['match'] ? true : false;
 							},
-							'controller' => 'TestControllers',
-							'action' => 'test_action'
+							'controller' => 'Rbac',
+							'action' => 'action'
 						)
 					)
 				)
@@ -92,8 +92,8 @@ class AuthRbacTest extends \lithium\test\Unit {
 					array(
 						'message' => 'Rule access denied message.',
 						'redirect' => 'Users::login',
-						'resources' => '*',
-						'match' => 'TestControllers::test_action'
+						'resources' => 'user',
+						'match' => 'Rbac::action'
 					),
 					array(
 						'message' => 'Test no overwrite.',
@@ -113,8 +113,8 @@ class AuthRbacTest extends \lithium\test\Unit {
 	public function testCheck() {
 		$request = new Request(array('params' => array(
 			'library' => 'test_library',
-			'controller' => 'test_controllers',
-			'action' => 'test_action'
+			'controller' => 'Rbac',
+			'action' => 'action'
 		)));
 
 		$guest = array();
@@ -140,8 +140,8 @@ class AuthRbacTest extends \lithium\test\Unit {
 	public function testCheckMessageOverride() {
 		$request = new Request(array('params' => array(
 			'library' => 'test_library',
-			'controller' => 'test_controllers',
-			'action' => 'test_action'
+			'controller' => 'Rbac',
+			'action' => 'action'
 		)));
 
 		$guest = array();
@@ -163,8 +163,8 @@ class AuthRbacTest extends \lithium\test\Unit {
 		$this->assertIdentical($expected, $result);
 
 		$request->params = array(
-			'controller' => 'test_controllers',
-			'action' => 'test_denied_action'
+			'controller' => 'Rbac',
+			'action' => 'denied'
 		);
 
 		$request->data = $guest;
@@ -200,41 +200,41 @@ class AuthRbacTest extends \lithium\test\Unit {
 	public function testParseMatch() {
 		$params = array(
 			'library' => 'test_library',
-			'controller' => 'test_controllers',
-			'action' => 'test_action'
+			'controller' => 'Rbac',
+			'action' => 'action'
 		);
 		$request = new Request(array('params' => $params));
 
 		$match = array(
 			'library' => 'test_library',
-			'controller' => 'TestControllers',
-			'action' => 'test_action'
+			'controller' => 'Rbac',
+			'action' => 'action'
 		);
 		$this->assertTrue(Access::adapter('test_check')->parseMatch($match, compact('request', 'params')));
 
-		$match = array('controller' => 'TestControllers', 'action' => 'test_action');
+		$match = array('controller' => 'Rbac', 'action' => 'action');
 		$this->assertTrue(Access::adapter('test_check')->parseMatch($match, compact('request', 'params')));
 
-		$match = array('library' => 'test_library', 'action' => 'test_action');
+		$match = array('library' => 'test_library', 'action' => 'action');
 		$this->assertTrue(Access::adapter('test_check')->parseMatch($match, compact('request', 'params')));
 
-		$match = array('library' => 'test_library', 'controller' => 'TestControllers');
+		$match = array('library' => 'test_library', 'controller' => 'Rbac');
 		$this->assertTrue(Access::adapter('test_check')->parseMatch($match, compact('request', 'params')));
 
 		$match = array(
 			'library' => 'test_no_match',
-			'controller' => 'TestControllers',
-			'action' => 'test_action'
+			'controller' => 'Rbac',
+			'action' => 'action'
 		);
 		$this->assertFalse(Access::adapter('test_check')->parseMatch($match, compact('request', 'params')));
 
-		$match = 'TestControllers::test_action';
+		$match = 'Rbac::action';
 		$this->assertTrue(Access::adapter('test_check')->parseMatch($match, compact('request', 'params')));
 
-		$match = 'TestControllers::*';
+		$match = 'Rbac::*';
 		$this->assertTrue(Access::adapter('test_check')->parseMatch($match, compact('request', 'params')));
 
-		$match = '*::test_action';
+		$match = '*::action';
 		$this->assertTrue(Access::adapter('test_check')->parseMatch($match, compact('request', 'params')));
 
 		$match = '*::*';
@@ -269,7 +269,7 @@ class AuthRbacTest extends \lithium\test\Unit {
 
 	public function testClosures() {
 		$request = new Request(array('params' => array(
-			'controller' => 'test_controllers', 'action' => 'test_action'
+			'controller' => 'Rbac', 'action' => 'action'
 		)));
 
 		$user = $request->data = array('username' => 'test', 'role' => 'user');
@@ -286,7 +286,7 @@ class AuthRbacTest extends \lithium\test\Unit {
 		$result = Access::check('test_closures', $user, $request, $authSuccess);
 		$this->assertIdentical($expected, $result);
 
-		$request->params = array('controller' => 'TestControllers', 'action' => 'bad_action');
+		$request->params = array('controller' => 'Rbac', 'action' => 'bad_action');
 
 		$request->params['match'] = true;
 		$request->params['allow'] = true;
@@ -330,7 +330,7 @@ class AuthRbacTest extends \lithium\test\Unit {
 		$request = new Request();
 
 		$config = Access::config('test_no_rules_configured');
-		$request->params = array('controller' => 'Tests', 'action' => 'granted');
+		$request->params = array('controller' => 'Rbac', 'action' => 'granted');
 
 		$this->assertTrue(empty($config['roles']));
 		$this->expectException('No rules defined for adapter configuration.');
