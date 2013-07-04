@@ -2,7 +2,6 @@
 
 namespace li3_access\extensions\adapter\security\access;
 
-use lithium\security\Auth;
 use lithium\util\Inflector;
 use lithium\core\ConfigException;
 
@@ -98,7 +97,10 @@ class AuthRbac extends \lithium\core\Object {
 		} elseif (is_callable($match)) {
 			return (boolean) $match($params['request'], $params);
 		}
+		return static::routeMatch($match, $params);
+	}
 
+	protected static function routeMatch($match, $params) {
 		$matchParams = array();
 		foreach ((array) $match as $key => $param) {
 			if (is_string($param)) {

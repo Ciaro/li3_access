@@ -39,10 +39,10 @@ class AuthRbacTest extends \lithium\test\Unit {
 				'rules' => array(
 					array(
 						'resources' => '*',
-						'allow' => array(function($request, &$ruleOptions) {
+						'allow' => function($request, &$ruleOptions) {
 							$ruleOptions['message'] = 'Test allow options set.';
 							return $request->params['allow'] ? true : false;
-						}),
+						},
 						'match' => array(
 							function($request) {
 								return $request->params['match'] ? true : false;
@@ -148,6 +148,7 @@ class AuthRbacTest extends \lithium\test\Unit {
 		$user = array('username' => 'test', 'role' => 'user');
 
 		$request->data = $guest;
+
 		$expected = array('message' => 'Rule access denied message.', 'redirect' => 'Users::login');
 		$result = Access::check('test_message_override', $guest, $request, array(
 			'checkSession' => false
@@ -161,7 +162,7 @@ class AuthRbacTest extends \lithium\test\Unit {
 			'success' => 'true'
 		));
 		$this->assertIdentical($expected, $result);
-
+		
 		$request->params = array(
 			'controller' => 'Rbac',
 			'action' => 'denied'
@@ -274,7 +275,7 @@ class AuthRbacTest extends \lithium\test\Unit {
 
 		$user = $request->data = array('username' => 'test', 'role' => 'user');
 		$authSuccess = array('checkSession' => false, 'success' => true);
-
+		
 		$request->params['match'] = true;
 		$request->params['allow'] = true;
 		$result = Access::check('test_closures', $user, $request, $authSuccess);
