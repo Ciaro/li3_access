@@ -125,15 +125,12 @@ class AuthRbacTest extends \lithium\test\Unit {
 			'message' => 'You are not authorized to access this page.',
 			'redirect' => 'Users::login'
 		);
-		$result = Access::check('test_check', $guest, $request, array('checkSession' => false));
+		$result = Access::check('test_check', $guest, $request);
 		$this->assertIdentical($expected, $result);
 
 		$request->data = $user;
 		$expected = array();
-		$result = Access::check('test_check', $user, $request, array(
-			'checkSession' => false,
-			'success' => true
-		));
+		$result = Access::check('test_check', $user, $request);
 		$this->assertIdentical($expected, $result);
 	}
 
@@ -150,17 +147,12 @@ class AuthRbacTest extends \lithium\test\Unit {
 		$request->data = $guest;
 
 		$expected = array('message' => 'Rule access denied message.', 'redirect' => 'Users::login');
-		$result = Access::check('test_message_override', $guest, $request, array(
-			'checkSession' => false
-		));
+		$result = Access::check('test_message_override', $guest, $request);
 		$this->assertIdentical($expected, $result);
 
 		$request->data = $user;
 		$expected = array();
-		$result = Access::check('test_message_override', $user, $request, array(
-			'checkSession' => false,
-			'success' => 'true'
-		));
+		$result = Access::check('test_message_override', $user, $request);
 		$this->assertIdentical($expected, $result);
 		
 		$request->params = array(
@@ -173,9 +165,7 @@ class AuthRbacTest extends \lithium\test\Unit {
 			'message' => 'You are not authorized to access this page.',
 			'redirect' => 'Users::login'
 		);
-		$result = Access::check('test_message_override', $guest, $request, array(
-			'checkSession' => false
-		));
+		$result = Access::check('test_message_override', $guest, $request);
 		$this->assertIdentical($expected, $result);
 
 		$request->data = $user;
@@ -183,15 +173,12 @@ class AuthRbacTest extends \lithium\test\Unit {
 			'message' => 'You are not authorized to access this page.',
 			'redirect' => 'Users::login'
 		);
-		$result = Access::check('test_message_override', $user, $request, array(
-			'checkSession' => false
-		));
+		$result = Access::check('test_message_override', $user, $request);
 		$this->assertIdentical($expected, $result);
 
 		$request->data = $user;
 		$expected = array('message' => 'Message override!', 'redirect' => '/new_redirect');
 		$result = Access::check('test_message_override', $user, $request, array(
-			'checkSession' => false,
 			'message' => 'Message override!',
 			'redirect' => '/new_redirect'
 		));
@@ -274,24 +261,23 @@ class AuthRbacTest extends \lithium\test\Unit {
 		)));
 
 		$user = $request->data = array('username' => 'test', 'role' => 'user');
-		$authSuccess = array('checkSession' => false, 'success' => true);
 		
 		$request->params['match'] = true;
 		$request->params['allow'] = true;
-		$result = Access::check('test_closures', $user, $request, $authSuccess);
+		$result = Access::check('test_closures', $user, $request);
 		$this->assertIdentical(array(), $result);
 
 		$request->params['match'] = true;
 		$request->params['allow'] = false;
 		$expected = array('message' => 'Test allow options set.', 'redirect' => 'Users::login');
-		$result = Access::check('test_closures', $user, $request, $authSuccess);
+		$result = Access::check('test_closures', $user, $request);
 		$this->assertIdentical($expected, $result);
 
 		$request->params = array('controller' => 'Rbac', 'action' => 'denied');
 
 		$request->params['match'] = true;
 		$request->params['allow'] = true;
-		$result = Access::check('test_closures', $user, $request, $authSuccess);
+		$result = Access::check('test_closures', $user, $request);
 		$expected = array(
 			'message' => 'You are not authorized to access this page.',
 			'redirect' => 'Users::login'
@@ -299,30 +285,30 @@ class AuthRbacTest extends \lithium\test\Unit {
 		$this->assertIdentical($expected, $result);
 
 		$request->params['allow'] = true;
-		$result = Access::check('test_allow_closure', $user, $request, $authSuccess);
+		$result = Access::check('test_allow_closure', $user, $request);
 		$expected = array();
 		$this->assertIdentical($expected, $result);
 
 		$request->params['allow'] = false;
-		$result = Access::check('test_allow_closure', $user, $request, $authSuccess);
+		$result = Access::check('test_allow_closure', $user, $request);
 		$expected = array('message' => 'Test allow options set.', 'redirect' => 'Users::login');
 		$this->assertIdentical($expected, $result);
 
 		$request->params['allow'] = true;
 		$request->params['allow_match'] = true;
-		$result = Access::check('test_allow_closure_match', $user, $request, $authSuccess);
+		$result = Access::check('test_allow_closure_match', $user, $request);
 		$expected = array();
 		$this->assertIdentical($expected, $result);
 
 		$request->params['allow'] = false;
 		$request->params['allow_match'] = true;
-		$result = Access::check('test_allow_closure_match', $user, $request, $authSuccess);
+		$result = Access::check('test_allow_closure_match', $user, $request);
 		$expected = array('message' => 'Test allow options set 2.', 'redirect' => 'Users::login');
 		$this->assertIdentical($expected, $result);
 
 		$request->params['allow'] = true;
 		$request->params['allow_match'] = false;
-		$result = Access::check('test_allow_closure_match', $user, $request, $authSuccess);
+		$result = Access::check('test_allow_closure_match', $user, $request);
 		$expected = array('message' => 'You are not authorized to access this page.', 'redirect' => 'Users::login');
 		$this->assertIdentical($expected, $result);
 	}
