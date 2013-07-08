@@ -1,0 +1,14 @@
+{
+    "name": "ciaro/li3_access",
+    "description": "Lithium Access Plugin.",
+    "type": "lithium-library",
+    "authors": [
+        {
+            "name": "Tom Maiaroto"
+        }
+    ],
+    "require": {
+        "composer/installers": "*"
+    },
+    "minimum-stability": "dev"
+}
